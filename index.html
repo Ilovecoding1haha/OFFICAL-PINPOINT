@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#07080b">
 <title>PinPoint — Live Location Safety Network</title>
 <style>
   *{box-sizing:border-box}
@@ -29,4 +30,26 @@
   .brand span{color:#ff3b5c}
   .pill{
     margin-left:auto;display:flex;align-items:center;gap:6px;font:600 10px/1 ui-monospace,monospace;
-    letter-spacing:.12
+    letter-spacing:.12em;padding:6px 9px;border:1px solid #262c38;border-radius:99px;color:#9aa3b3;
+  }
+  .pill i{width:6px;height:6px;border-radius:99px;background:#ff3b5c;animation:pulse 1.6s infinite}
+  @keyframes pulse{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(255,59,92,.6)}50%{opacity:.55;box-shadow:0 0 0 5px rgba(255,59,92,0)}}
+  h1{font-size:29px;line-height:1.16;letter-spacing:-.03em;margin:0 0 12px}
+  h1 em{font-style:italic;color:#ff5c78}
+  .sub{color:#8b93a3;font-size:13.5px;line-height:1.55;margin:0 0 18px}
+  .trust{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:20px}
+  .tchip{
+    display:flex;align-items:center;gap:6px;font-size:10.5px;color:#8b93a3;
+    border:1px solid #1c212b;border-radius:99px;padding:5px 9px;background:#0b0e13;
+  }
+  .tchip b{color:#cfd5e0}
+  .tchip .dot{width:5px;height:5px;border-radius:99px;background:#2ee6a8}
+  .card{background:#0d1016;border:1px solid #1c212b;border-radius:18px;padding:16px}
+  .statrow{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px}
+  .stat{text-align:center;padding:8px 4px;border-right:1px solid #171b23}
+  .stat:last-child{border-right:0}
+  .stat b{display:block;font:600 17px/1.2 ui-monospace,monospace;color:#e9ecf3}
+  .stat small{font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:#6b7383}
+  .btn{
+    width:100%;padding:13px;border-radius:12px;border:1px solid transparent;
+    font:600 13.5px/1 ui-sans-serif,system-ui;cursor
